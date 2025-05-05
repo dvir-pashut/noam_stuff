@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>לנס שלי</title>
+  <link rel="stylesheet" href="main.css" />
+  <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+</head>
+<body>
+  <header class="hero">
+    <div id="bg1" class="hero-bg visible"></div>
+    <div id="bg2" class="hero-bg"></div>
+    <h1>רק תזכורת שאני אוהב אותך מלא מלא מלא מלא ❤️❤️❤️❤️❤️❤️</h1>
+  </header>
+
+  <div class="button-container">
+    <button id="playBtn" class="btn">נעם תלחצי פה 🎵</button>
+    <button id="letterBtn" class="btn">מכתב 💌</button>
+    <button id="shuffleGalleryBtn" class="btn">גלריה 🎞️</button>
+    <!-- <button id="videoGalleryBtn" class="btn">סרטונים 🎥</button> -->
+    
+  </div>
+
+  <section class="gallery" id="gallery"></section>
+  <!-- <section class="video-gallery" id="videoGallery"></section> -->
+
+
+  <footer>
+    <div id="loveTimer">מאוהב קשות כבר ...</div>
+    <div>נוצר ע״י אחד שאוהב אותך מלאאאאאא 🥰</div>
+  </footer>
+
+  <audio id="player"></audio>
+
+  <!-- Lightbox for Images -->
+  <div id="lightbox" class="lightbox">
+    <button class="close-btn" onclick="hideLightbox()">❌</button>
+    <img id="lightbox-img" src="" alt="תמונה" />
+  </div>
+  <!-- Video Lightbox -->
+  <div id="videoLightbox" class="lightbox">
+    <button class="close-btn" onclick="hideVideoLightbox()">❌</button>
+    <video id="lightbox-video" controls></video>
+  </div>
+
+
+  <!-- Letter Popup -->
+  <div id="letterBox" class="letter-box">
+    <div class="letter-content">
+      <button class="close-btn" onclick="hideLetter()">❌</button>
+      <p>קודם כל תני להתחיל בלציין שמזל שאנחנו לא זוג קיטשי ודביק <br> באמת מזל <br> אבל מה שכן.
+        אני לא יכול לדמיין את החיים שלי בלעדייך <br> נכנסת אליהם כל כך מהר ותפסת מקום אצלי בלב <br> כל רגע בלעדייך קשה יותר מהשני <br> וכל רגע שאני איתך זה חלום שמתגשם <br
+        אני באמת לא מבין איך חייתי בלעדייך עד עכשיו <br> ובאמת אני שלך <br> כל כולי שלך <br> זכיתי בך <br> בשבילך עד סוף העולם (חוץ מהשקית בשירותים 😉) <br>
+        אני אוהב אותך מלא מלא מלא <br> נסקוש <br> את באמת מושלמת </p>
+    </div>
+  </div>
+  
+  <div style="margin: 30px 0;">
+    <p style="text-align: center; font-size: 18px;">תלחצי פה אם את מאשרת</p>
+    <button class="btn" id="approvedBtn">
+      <img src="./img/approved.png" alt="Approved" style="height: 60px; border-radius: 16px;" />
+    </button>
+    <p style="text-align: center; font-size: 18px;">אגב... כבר אמרתי לך שאני אוהב אותך ? </p>
+
+  </div>
+  
+  <script src="main.js"></script>
+</body>
+</html>
