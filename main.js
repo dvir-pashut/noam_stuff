@@ -82,7 +82,7 @@ const songs = [
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightbox-img");
   
-  for (let i = 1; i <= 24; i++) {
+  for (let i = 1; i <= 26; i++) {
     const img = document.createElement("img");
     img.src = "./img/" + i + ".jpg";
     img.alt = "תמונה " + i;
