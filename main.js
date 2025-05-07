@@ -1,3 +1,4 @@
+const number_if_images = 35;
 const songs = [
     "Our Song.mp3",
     "מכה אפורה.mp3",
@@ -22,7 +23,7 @@ const songs = [
   }
   
   function createHearts() {
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 22; i++) {
       const heart = document.createElement("div");
       heart.className = "heart";
       heart.textContent = "❤️";
@@ -82,7 +83,7 @@ const songs = [
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightbox-img");
   
-  for (let i = 1; i <= 30; i++) {
+  for (let i = 1; i <= number_if_images; i++) {
     const img = document.createElement("img");
     img.src = "./img/" + i + ".jpg";
     img.alt = "תמונה " + i;
@@ -121,7 +122,7 @@ const songs = [
   let currentBg = 1;
   
   function getRandomImage() {
-    return "./img/" + (Math.floor(Math.random() * 24) + 1) + ".jpg";
+    return "./img/" + (Math.floor(Math.random() * number_if_images) + 1) + ".jpg";
   }
   
   function switchBackground() {
