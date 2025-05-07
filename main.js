@@ -1,4 +1,4 @@
-const number_if_images = 35;
+const number_of_images = 35;
 const songs = [
     "Our Song.mp3",
     "מכה אפורה.mp3",
@@ -76,17 +76,19 @@ const songs = [
   
   player.addEventListener("ended", playNext);
   playBtn.addEventListener("click", playNext);
-  setInterval(createHearts, 10000);
+  setInterval(createHearts, 7000);
+  setInterval(createLoveNotes, 11000);
   
   // Gallery & Lightbox
   const gallery = document.getElementById("gallery");
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightbox-img");
   
-  for (let i = 1; i <= number_if_images; i++) {
+  for (let i = 1; i <= number_of_images; i++) {
     const img = document.createElement("img");
     img.src = "./img/" + i + ".jpg";
     img.alt = "תמונה " + i;
+    img.loading = "lazy"; // its loading it lazy... just like me !!!!!
     img.addEventListener("click", () => {
       lightboxImg.src = img.src;
       lightbox.classList.add("visible");
@@ -122,7 +124,7 @@ const songs = [
   let currentBg = 1;
   
   function getRandomImage() {
-    return "./img/" + (Math.floor(Math.random() * number_if_images) + 1) + ".jpg";
+    return "./img/" + (Math.floor(Math.random() * number_of_images) + 1) + ".jpg";
   }
   
   function switchBackground() {
@@ -193,9 +195,10 @@ const songs = [
       "את החיים שלי ❤️",
       "נסקוש שלי 🥰",
       "זכיתי בך 💕",
+      "כבר אמרתי שאני מאוהב קשות? 😍",
     ];
   
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 15; i++) {
       const note = document.createElement("div");
       note.className = "love-note";
       note.textContent = messages[Math.floor(Math.random() * messages.length)];
