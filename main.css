@@ -2,7 +2,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  background: #ffe5e5;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: center;
