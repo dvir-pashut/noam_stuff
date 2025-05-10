@@ -21,6 +21,10 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  #get value vrom github secrets and store it to env called STATICRYPT_PASSWORD
+  STATICRYPT_PASSWORD: ${{ secrets.STATICRYPT_PASSWORD }}
+
 jobs:
   # Single deploy job since we're just deploying
   deploy:
@@ -38,6 +42,12 @@ jobs:
         with:
           # Upload entire repository
           path: '.'
+      - name: Decrypt static content
+        run: |
+          # Decrypt the static content using the password stored in the STATICRYPT_PASSWORD environment variable
+          echo encrypting static content...
+          staticrypt index.html --remember --short --template-color-secondary "#FFFFFF" --template-color-primary "#4CAF50" --template-error "אני אוהב אותך... אבל זאת ססמה לא נכונה"
+          mv encrypted/index.html index.html
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
