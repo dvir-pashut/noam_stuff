@@ -242,6 +242,21 @@ function updateLoveTimer() {
 /* --------------------------------------------------
    9)  UPLOADS  (unique‑name version)
 -------------------------------------------------- */
+
+function wireEvents() {
+  playBtn          .addEventListener("click", playNext);
+  letterBtn        .addEventListener("click", () => letterBox.classList.add("visible"));
+  shuffleGalleryBtn.addEventListener("click", () => {
+    if (galleryInterval) clearInterval(galleryInterval);
+    startGalleryShuffle();
+  });
+  $("approvedBtn") .addEventListener("click", createApprovedExplosions);
+
+  // ⭐ NEW:
+  $("uploadImgBtn") .addEventListener("click", () => uploadFiles("img"));
+  $("uploadSongBtn").addEventListener("click", () => uploadFiles("songs"));
+}
+
 async function uploadFiles(type) {
   const input = document.createElement("input");
   input.type      = "file";
