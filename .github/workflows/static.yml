@@ -45,6 +45,7 @@ jobs:
             --template-color-primary "#4CAF50" \
             --template-error "אני אוהב אותך... אבל זאת ססמה לא נכונה"
           mv encrypted/index.html index.html
+          rm -rf encrypted
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
