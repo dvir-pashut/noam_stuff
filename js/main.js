@@ -3,7 +3,7 @@
    Author:  Dvir Pashut
 ---------------------------------------------------- */
 
-const BUCKET   = "https://nessy.site.s3.eu-central-1.amazonaws.com";
+const BUCKET   = "https://nessy-site.s3.eu-central-1.amazonaws.com";
 const IMG_DIR  = "img/";
 const SONG_DIR = "songs/";
 const APPROVED_ICON = `./img/approved.png`;
