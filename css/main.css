@@ -7,6 +7,7 @@ body {
   flex-direction: column;
   align-items: center;
   overflow-x: hidden;
+  text-align: center;
 }
 
 .hero {
@@ -75,15 +76,18 @@ body {
 /* --- Gallery --- */
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 20px;
-  width: 90%;
+  width: 100%;
   max-width: 1200px;
   margin: 40px auto;
+  justify-items: center;
 }
 .gallery img {
   width: 100%;
-  height: 300px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
@@ -124,22 +128,19 @@ body {
 }
 @keyframes fadein { to { opacity: 1; } }
 @keyframes fadeout { to { opacity: 0; } }
-/* Persistent toast override */
 .persistent-toast {
-    animation: none !important;
-    opacity: 1 !important;
-  }
+  animation: none !important;
+  opacity: 1 !important;
+}
 
-  #nowPlayingToast {
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    right: auto;
-    text-align: center;
-    max-width: 90vw;
-  }
-  
-  
+#nowPlayingToast {
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  right: auto;
+  text-align: center;
+  max-width: 90vw;
+}
 
 /* --- Footer --- */
 footer {
@@ -211,106 +212,139 @@ footer {
 }
 
 .letter-content {
-    background: #fff0f5;
-    padding: 40px;
-    width: 95%;
-    max-width: 800px; /* ⬅ NEW: keep it centered on desktops */
-    height: 90%;
-    border-radius: 20px;
-    text-align: right;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    position: relative;
-    font-size: 2.5rem;
-    line-height: 2.2;
-    overflow-y: auto;
-  }
-  
-  .letter-content .close-btn {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    font-size: 1.5rem;
-    background: none;
-    border: none;
-    color: #b30059;
-    cursor: pointer;
-  }
+  background: #fff0f5;
+  padding: 40px;
+  width: 95%;
+  max-width: 800px;
+  height: 90%;
+  border-radius: 20px;
+  text-align: right;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+  font-size: 2.5rem;
+  line-height: 2.2;
+  overflow-y: auto;
+}
 
-  .approved-explosion {
-    position: fixed;
-    bottom: -60px;
-    animation: rise linear forwards;
-    pointer-events: none;
-    z-index: 9999;
-    border-radius: 50%;
-  }
+.letter-content .close-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: #b30059;
+  cursor: pointer;
+}
+
+.approved-explosion {
+  position: fixed;
+  bottom: -60px;
+  animation: rise linear forwards;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 50%;
+}
 
 /* --- Mobile Tweaks --- */
 @media (max-width: 600px) {
-    .btn {
-      font-size: 1.1rem;
-      padding: 14px 28px;
-      min-width: 160px;
-    }
-  
-    .letter-content {
-        font-size: 1.6rem;
-        padding: 30px;
-      }
-  
-    footer {
-      font-size: 1.1rem;
-      padding: 20px;
-    }
-  
-    #loveTimer {
-      font-size: 1.2rem;
-    }
+  .gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
   }
-
-  .love-note {
-    position: fixed;
-    bottom: -40px;
-    font-size: 24px;
-    color: #ff69b4;
-    animation: rise linear forwards;
-    pointer-events: none;
-    z-index: 9999;
-    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    font-weight: bold;
+  .gallery img {
+    width: calc(33% - 10px);
+    min-width: 90px;
+    max-width: 100px;
+    height: auto;
+    aspect-ratio: 3/4;
   }
-
-/* will add next release */
-
-  /* --- Video Gallery --- */
-.video-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    width: 90%;
-    max-width: 1200px;
-    margin: 40px auto;
-  }
-  
-  .video-thumb {
-    width: 100%;
-    height: 300px;
-    object-fit: cover;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
-    cursor: pointer;
-    transition: transform .3s ease;
-  }
-  
-  .video-thumb:hover {
-    transform: scale(1.05);
-  }
-  
-  /* Video Lightbox */
-  #videoLightbox video {
+  .btn {
+    font-size: 1rem;
+    padding: 10px 20px;
+    width: auto;
+    min-width: 120px;
     max-width: 90%;
-    max-height: 90%;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+    margin: auto;
   }
-  
+  .letter-content {
+    font-size: 1.2rem;
+    padding: 20px;
+  }
+  footer, #loveTimer {
+    text-align: center;
+    padding: 10px;
+    font-size: 1rem;
+  }
+  .lightbox img,
+  #videoLightbox video {
+    max-width: 95vw;
+    max-height: 80vh;
+  }
+}
+
+/* --- Universal Centering --- */
+.text-block,
+.button-container,
+footer,
+#loveTimer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 0 auto;
+}
+
+/* --- Love Note --- */
+.love-note {
+  position: fixed;
+  bottom: -40px;
+  font-size: 24px;
+  color: #ff69b4;
+  animation: rise linear forwards;
+  pointer-events: none;
+  z-index: 9999;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-weight: bold;
+}
+
+/* --- Video Gallery --- */
+.video-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  width: 90%;
+  max-width: 1200px;
+  margin: 40px auto;
+}
+
+.video-thumb {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
+  cursor: pointer;
+  transition: transform .3s ease;
+}
+
+.video-thumb:hover {
+  transform: scale(1.05);
+}
+
+#videoLightbox video {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+/* --- Media Fallbacks --- */
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
