@@ -41,8 +41,8 @@ jobs:
           # Decrypt the static content using the password stored in the STATICRYPT_PASSWORD environment variable
           echo encrypting static content...
           npx staticrypt index.html --remember --short \
-            --template-color-secondary "#FFFFFF" \ # white
-            --template-color-primary "#4CAF50" \ # green
+            --template-color-secondary "#FFFFFF" \
+            --template-color-primary "#4CAF50" \
             --template-error "אני אוהב אותך... אבל זאת ססמה לא נכונה"
           mv encrypted/index.html index.html
       - name: Setup Pages
