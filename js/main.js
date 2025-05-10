@@ -6,7 +6,7 @@
 const BUCKET   = "http://nessy.site.s3.eu-central-1.amazonaws.com";
 const IMG_DIR  = "img/";
 const SONG_DIR = "songs/";
-const APPROVED_ICON = `${BUCKET}/${IMG_DIR}approved.png`;
+const APPROVED_ICON = `./img/approved.png`;
 
 /* ---------- tiny helpers ---------- */
 const $ = (id) => document.getElementById(id);
