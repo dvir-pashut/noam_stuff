@@ -1,263 +1,295 @@
-const number_of_images = 35;
-const songs = [
-    "Our Song.mp3",
-    "מכה אפורה.mp3",
-    "מספיק בן אדם.mp3",
-    "צעדים.mp3",
-    "Dancing Queen.mp3",
-    "רק שלך.mp3",
-    "זכיתי לאהוב.mp3",
-    "Iris.mp3",
-    "Die With A Smile.mp3",
-  ];
-  
-  const player = document.getElementById("player");
-  const playBtn = document.getElementById("playBtn");
-  const letterBtn = document.getElementById("letterBtn");
-  const queue = [];
-  
-  function shuffle(arr) {
-    return arr.map(v => [Math.random(), v])
-              .sort((a, b) => a[0] - b[0])
-              .map(v => v[1]);
-  }
-  
-  function createHearts() {
-    for (let i = 0; i < 22; i++) {
-      const heart = document.createElement("div");
-      heart.className = "heart";
-      heart.textContent = "❤️";
-      heart.style.left = Math.random() * 100 + "vw";
-      heart.style.animationDuration = (3 + Math.random() * 2) + "s";
-      heart.style.fontSize = (16 + Math.random() * 24) + "px";
-      document.body.appendChild(heart);
-      setTimeout(() => heart.remove(), 5000);
-    }
-  }
-  function createApprovedExplosions() {
-    for (let i = 0; i < 12; i++) {
-      const img = document.createElement("img");
-      img.src = "./img/approved.png";
-      img.className = "approved-explosion";
-      img.style.left = Math.random() * 100 + "vw";
-      img.style.animationDuration = (3 + Math.random() * 2) + "s";
-      img.style.width = (40 + Math.random() * 40) + "px";
-      document.body.appendChild(img);
-      setTimeout(() => img.remove(), 5000);
-    }
-  }
-  document.getElementById("approvedBtn").addEventListener("click", createApprovedExplosions);
+/* ---------------------------------------------------
+   main.js  —  Dynamic S‑3 version
+   Author:  Dvir Pashut
+---------------------------------------------------- */
 
-  
-  function showToast(text) {
-    let toast = document.getElementById("nowPlayingToast");
-  
-    if (!toast) {
-      toast = document.createElement("div");
-      toast.id = "nowPlayingToast";
-      toast.className = "toast persistent-toast";
-      document.body.appendChild(toast);
-    }
-  
-    // Remove the .mp3 suffix from the song name
-    const songName = text.replace(".mp3", "");
-    toast.textContent = "🎵 " + songName + " 💖";
+const BUCKET   = "http://nessy.site.s3.eu-central-1.amazonaws.com";
+const IMG_DIR  = "img/";
+const SONG_DIR = "songs/";
+const APPROVED_ICON = `${BUCKET}/${IMG_DIR}approved.png`;
+
+/* ---------- tiny helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const shuffle = (arr) => arr
+  .map(v => [Math.random(), v])
+  .sort((a, b) => a[0] - b[0])
+  .map(v => v[1]);
+
+/* ---------- DOM refs ---------- */
+const player            = $("player");
+const playBtn           = $("playBtn");
+const letterBtn         = $("letterBtn");
+const shuffleGalleryBtn = $("shuffleGalleryBtn");
+const gallery           = $("gallery");
+const lightbox          = $("lightbox");
+const lightboxImg       = $("lightbox-img");
+const letterBox         = $("letterBox");
+const bg1               = $("bg1");
+const bg2               = $("bg2");
+const loveTimer         = $("loveTimer");
+
+/* ---------- state ---------- */
+let   songs   = [];          // ["Our Song.mp3", ...]
+let   images  = [];          // ["1.jpg", "2.jpg", ...]
+const queue   = [];          // music shuffle queue
+let   currentBg = 1;
+let   galleryInterval = null;
+
+/* ===================================================
+   1) PUBLIC LIST‑OBJECTS  (XML) ➜ arrays
+=================================================== */
+async function listS3Objects(prefix, exts) {
+  const url = `${BUCKET}/?list-type=2&prefix=${encodeURIComponent(prefix)}`;
+  const res = await fetch(url, { mode: "cors" });
+  if (!res.ok) throw new Error(`S‑3 list failed for ${prefix}`);
+  const xml  = new DOMParser().parseFromString(await res.text(), "application/xml");
+  return Array.from(xml.getElementsByTagName("Key"))
+    .map(n => n.textContent)
+    .filter(k => exts.some(ext => k.toLowerCase().endsWith(ext)));
+}
+
+/* ===================================================
+   2)  INITIAL BOOTSTRAP
+=================================================== */
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    [songs, images] = await Promise.all([
+      listS3Objects(SONG_DIR, [".mp3"]),
+      listS3Objects(IMG_DIR , [".jpg", ".jpeg", ".png", ".gif", ".webp"])
+    ]);
+
+    // strip prefixes
+    songs  = songs .map(k => k.replace(SONG_DIR, ""));
+    images = images.map(k => k.replace(IMG_DIR , ""));
+
+    populateGallery();
+    initBackgrounds();
+    wireEvents();
+    updateLoveTimer();
+    setInterval(updateLoveTimer, 1_000);
+    setInterval(createHearts,      7_000);
+    setInterval(createLoveNotes,  11_000);
+
+  } catch (err) {
+    alert("⚠️  לא הצלחתי לקרוא את הקבצים מה‑S3, בדוק הרשאות‑ CORS/Policy");
+    console.error(err);
   }
-  
-  
-  function playNext() {
-    if (!queue.length) queue.push(...shuffle([...songs]));
-    const next = queue.shift();
-    player.src = "./songs/" + next;
-    player.play().catch(e => console.warn("Autoplay blocked:", e));
-    showToast(next);
-    createHearts();
-  }
-  
-  player.addEventListener("ended", playNext);
-  playBtn.addEventListener("click", playNext);
-  setInterval(createHearts, 7000);
-  setInterval(createLoveNotes, 11000);
-  
-  // Gallery & Lightbox
-  const gallery = document.getElementById("gallery");
-  const lightbox = document.getElementById("lightbox");
-  const lightboxImg = document.getElementById("lightbox-img");
-  
-  for (let i = 1; i <= number_of_images; i++) {
+});
+
+/* ===================================================
+   3)  GALLERY + LIGHTBOX
+=================================================== */
+function populateGallery() {
+  images.forEach(file => {
     const img = document.createElement("img");
-    img.src = "./img/" + i + ".jpg";
-    img.alt = "תמונה " + i;
-    img.loading = "lazy"; // its loading it lazy... just like me !!!!!
-    img.addEventListener("click", () => {
-      lightboxImg.src = img.src;
-      lightbox.classList.add("visible");
-    });
+    img.src  = `${BUCKET}/${IMG_DIR}${file}`;
+    img.alt  = `תמונה ${file}`;
+    img.loading = "lazy";
+    img.addEventListener("click", () => showLightbox(img.src));
     gallery.appendChild(img);
-  }
-  
-  function hideLightbox() {
-    lightbox.classList.remove("visible");
-    lightboxImg.src = "";
-  }
-  lightbox.addEventListener("click", e => {
-    if (e.target === lightbox) hideLightbox();
   });
-  
-  // Letter Popup
-  const letterBox = document.getElementById("letterBox");
-  letterBtn.addEventListener("click", () => {
-    letterBox.classList.add("visible");
-  });
-  function hideLetter() {
-    letterBox.classList.remove("visible");
+}
+
+function showLightbox(src) {
+  lightboxImg.src = src;
+  lightbox.classList.add("visible");
+}
+function hideLightbox() {
+  lightbox.classList.remove("visible");
+  lightboxImg.src = "";
+}
+lightbox.addEventListener("click", (e) => e.target === lightbox && hideLightbox());
+
+/* ===================================================
+   4)  MUSIC PLAYER
+=================================================== */
+function showToast(text) {
+  let toast = $("nowPlayingToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "nowPlayingToast";
+    toast.className = "toast persistent-toast";
+    document.body.appendChild(toast);
   }
-  letterBox.addEventListener("click", (e) => {
-    if (e.target === letterBox) {
-      hideLetter();
-    }
-  });
-  
-  // Background Transition
-  const bg1 = document.getElementById("bg1");
-  const bg2 = document.getElementById("bg2");
-  let currentBg = 1;
-  
-  function getRandomImage() {
-    return "./img/" + (Math.floor(Math.random() * number_of_images) + 1) + ".jpg";
-  }
-  
-  function switchBackground() {
-    const nextBg = currentBg === 1 ? bg2 : bg1;
-    const current = currentBg === 1 ? bg1 : bg2;
-    nextBg.style.backgroundImage = `url("${getRandomImage()}")`;
-    nextBg.classList.add("visible");
-    current.classList.remove("visible");
-    currentBg = currentBg === 1 ? 2 : 1;
-  }
-  
+  toast.textContent = `🎵 ${text.replace(".mp3", "")} 💖`;
+}
+
+function playNext() {
+  if (!songs.length) return;
+  if (!queue.length) queue.push(...shuffle([...songs]));
+  const next = queue.shift();
+  player.src = `${BUCKET}/${SONG_DIR}${next}`;
+  player.play().catch(err => console.warn("Autoplay block:", err));
+  showToast(next);
+  createHearts();
+}
+player.addEventListener("ended", playNext);
+
+/* ===================================================
+   5)  BACKGROUND CROSS‑FADE
+=================================================== */
+function getRandomImage() {
+  return `${BUCKET}/${IMG_DIR}${images[Math.floor(Math.random()*images.length)]}`;
+}
+function switchBackground() {
+  const next   = currentBg === 1 ? bg2 : bg1;
+  const curr   = currentBg === 1 ? bg1 : bg2;
+  next.style.backgroundImage = `url("${getRandomImage()}")`;
+  next.classList.add("visible");
+  curr.classList.remove("visible");
+  currentBg = currentBg === 1 ? 2 : 1;
+}
+function initBackgrounds() {
   bg1.style.backgroundImage = `url("${getRandomImage()}")`;
   bg2.style.backgroundImage = `url("${getRandomImage()}")`;
-  setInterval(switchBackground, 7000);
-  
-  // 🕒 Timer from 6/3 at 14:26
-  const loveTimer = document.getElementById("loveTimer");
-  const startDate = new Date("2025-03-06T14:26:00");
-  
-  function updateLoveTimer() {
-    const now = new Date();
-    let diff = Math.floor((now - startDate) / 1000);
-  
-    const days = Math.floor(diff / 86400); diff %= 86400;
-    const hours = Math.floor(diff / 3600); diff %= 3600;
-    const minutes = Math.floor(diff / 60); diff %= 60;
-    const seconds = diff;
-  
-    loveTimer.textContent =
-      `מאוהב קשות כבר ${days} ימים ${hours} שעות ${minutes} דקות ${seconds} שניות`;
-  }
-  
-  setInterval(updateLoveTimer, 1000);
-  updateLoveTimer();
-  let galleryInterval = null;
+  setInterval(switchBackground, 7_000);
+}
 
-  function startGalleryShuffle() {
-    const images = Array.from(gallery.querySelectorAll("img"));
-    let current = 0;
-    const shuffled = shuffle(images);
-  
-    if (!shuffled.length) return;
-  
-    lightbox.classList.add("visible");
-    lightboxImg.src = shuffled[current++].src; // 🔥 Show first image immediately
-  
-    galleryInterval = setInterval(() => {
-      if (current >= shuffled.length) {
-        clearInterval(galleryInterval);
-        lightbox.classList.remove("visible");
-        return;
-      }
-      lightboxImg.src = shuffled[current++].src;
-    }, 5000); // You already changed this to 5 seconds
+/* ===================================================
+   6)  HEARTS ❤️ & LOVE NOTES 💌
+=================================================== */
+function createHearts() {
+  for (let i = 0; i < 22; i++) {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    heart.textContent = "❤️";
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.animationDuration = 3 + Math.random()*2 + "s";
+    heart.style.fontSize = 16 + Math.random()*24 + "px";
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 5_000);
   }
-  
+}
 
+function createLoveNotes() {
+  const msgs = [
+    "את מושלמת 💖", "אני אוהב אותך מלאאאאא 😘", "את החיים שלי ❤️",
+    "נסקוש שלי 🥰", "זכיתי בך 💕", "כבר אמרתי שאני מאוהב קשות? 😍"
+  ];
+  for (let i = 0; i < 15; i++) {
+    const note = document.createElement("div");
+    note.className = "love-note";
+    note.textContent = msgs[Math.floor(Math.random()*msgs.length)];
+    note.style.left = Math.random()*100 + "vw";
+    note.style.animationDuration = 3 + Math.random()*2 + "s";
+    note.style.fontSize = 16 + Math.random()*24 + "px";
+    document.body.appendChild(note);
+    setTimeout(() => note.remove(), 5_000);
+  }
+}
+
+/* --------------------------------------------------
+   🎉 Approved explosions
+-------------------------------------------------- */
+function createApprovedExplosions() {
+  for (let i = 0; i < 12; i++) {
+    const img = document.createElement("img");
+    img.src = APPROVED_ICON;
+    img.className = "approved-explosion";
+    img.style.left = Math.random()*100 + "vw";
+    img.style.animationDuration = 3 + Math.random()*2 + "s";
+    img.style.width = 40 + Math.random()*40 + "px";
+    document.body.appendChild(img);
+    setTimeout(() => img.remove(), 5_000);
+  }
+}
+
+/* ===================================================
+   7)  SHUFFLE‑GALLERY SLIDESHOW
+=================================================== */
+function startGalleryShuffle() {
+  if (!images.length) return;
+  const shuffled = shuffle([...images]);
+  let idx = 0;
+  showLightbox(`${BUCKET}/${IMG_DIR}${shuffled[idx++]}`);
+
+  galleryInterval = setInterval(() => {
+    if (idx >= shuffled.length) {
+      clearInterval(galleryInterval);
+      hideLightbox();
+      return;
+    }
+    lightboxImg.src = `${BUCKET}/${IMG_DIR}${shuffled[idx++]}`;
+  }, 5_000);
+}
+
+/* ===================================================
+   8)  MISC  (letter, timer, wiring)
+=================================================== */
+function hideLetter()   { letterBox.classList.remove("visible"); }
+function wireEvents() {
+  playBtn          .addEventListener("click", playNext);
+  letterBtn        .addEventListener("click", () => letterBox.classList.add("visible"));
   shuffleGalleryBtn.addEventListener("click", () => {
-    if (galleryInterval) clearInterval(galleryInterval); // so it will not happened twice
+    if (galleryInterval) clearInterval(galleryInterval);
     startGalleryShuffle();
   });
+  $("approvedBtn") .addEventListener("click", createApprovedExplosions);
+}
 
+const startDate = new Date("2025-03-06T14:26:00");
+function updateLoveTimer() {
+  const now  = new Date();
+  let diff   = Math.floor((now - startDate)/1_000);
+  const days    = Math.floor(diff/86_400); diff %= 86_400;
+  const hours   = Math.floor(diff/3_600);  diff %= 3_600;
+  const mins    = Math.floor(diff/60);     diff %= 60;
+  const secs    = diff;
+  loveTimer.textContent =
+    `מאוהב קשות כבר ${days} ימים ${hours} שעות ${mins} דקות ${secs} שניות`;
+}
 
-  function createLoveNotes() {
-    const messages = [
-      "את מושלמת 💖",
-      "אני אוהב אותך מלאאאאא 😘",
-      "את החיים שלי ❤️",
-      "נסקוש שלי 🥰",
-      "זכיתי בך 💕",
-      "כבר אמרתי שאני מאוהב קשות? 😍",
-    ];
-  
-    for (let i = 0; i < 15; i++) {
-      const note = document.createElement("div");
-      note.className = "love-note";
-      note.textContent = messages[Math.floor(Math.random() * messages.length)];
-      note.style.left = Math.random() * 100 + "vw";
-      note.style.animationDuration = (3 + Math.random() * 2) + "s";
-      note.style.fontSize = (16 + Math.random() * 24) + "px";
-      document.body.appendChild(note);
-      setTimeout(() => note.remove(), 5000);
+/* --------------------------------------------------
+   9)  UPLOADS  (unique‑name version)
+-------------------------------------------------- */
+async function uploadFiles(type) {
+  const input = document.createElement("input");
+  input.type      = "file";
+  input.multiple  = true;
+  input.accept    = type === "img" ? "image/*" : "audio/mpeg";
+
+  input.onchange = async () => {
+    for (const file of input.files) {
+      // --- Build a unique key ------------------------------------------------
+      const dir   = type === "img" ? IMG_DIR : SONG_DIR;
+      const ext   = file.name.substring(file.name.lastIndexOf("."));          // ".jpg"
+      const base  = file.name.substring(0, file.name.lastIndexOf("."));       // "myPic"
+      let   key   = `${base}${ext}`;                                          // default
+      let   idx   = 1;
+
+      const nameList = type === "img" ? images : songs;                       // existing names
+      while (nameList.includes(key)) {                                        // clash?
+        key = `${base}_${idx++}${ext}`;                                       // myPic_1.jpg …
+      }
+      const url  = `${BUCKET}/${dir}${key}`;
+
+      // --- Upload (PUT) ------------------------------------------------------
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file
+      });
+
+      if (!res.ok) {                                                          // failure
+        alert(`❌ Upload failed: ${file.name}`);
+        continue;
+      }
+
+      // --- Success UX --------------------------------------------------------
+      if (type === "img") {
+        images.push(key);
+        const img = document.createElement("img");
+        img.src = url;
+        img.loading = "lazy";
+        img.alt = "תמונה חדשה";
+        img.addEventListener("click", () => showLightbox(img.src));
+        gallery.prepend(img);
+      } else {
+        songs.push(key);
+        showToast(`התווסף שיר: ${base}`);
+      }
     }
-  }
-  
-  document.getElementById("approvedBtn").addEventListener("click", () => {
-    createApprovedExplosions();
-    // createLoveNotes();
-  });
+  };
 
-//video gallery stuff to add next release 
-
-//   const videoGalleryBtn = document.getElementById("videoGalleryBtn");
-// const videoLightbox = document.getElementById("videoLightbox");
-// const lightboxVideo = document.getElementById("lightbox-video");
-
-// videoGalleryBtn.addEventListener("click", () => {
-//   lightboxVideo.src = "./vid/1.mp4"; // default to first video
-//   videoLightbox.classList.add("visible");
-// });
-
-// // Click outside video to close
-// videoLightbox.addEventListener("click", e => {
-//   if (e.target === videoLightbox) hideVideoLightbox();
-// });
-
-// function hideVideoLightbox() {
-//   videoLightbox.classList.remove("visible");
-//   lightboxVideo.pause(); // stop playback
-//   lightboxVideo.src = "";
-// }
-
-// const videoGallery = document.getElementById("videoGallery");
-
-// for (let i = 1; i <= 5; i++) {
-//   const videoThumb = document.createElement("video");
-//   videoThumb.src = `./vid/${i}.mp4`;
-//   videoThumb.controls = false;
-//   videoThumb.muted = true;
-//   videoThumb.loop = true;
-//   videoThumb.classList.add("video-thumb");
-
-//   videoThumb.addEventListener("click", () => {
-//     lightboxVideo.src = `./vid/${i}.mp4`;
-//     videoLightbox.classList.add("visible");
-//     lightboxVideo.play();
-//   });
-
-//   videoThumb.addEventListener("mouseenter", () => videoThumb.play());
-//   videoThumb.addEventListener("mouseleave", () => {
-//     videoThumb.pause();
-//     videoThumb.currentTime = 0;
-//   });
-
-//   videoGallery.appendChild(videoThumb);
-// }
+  input.click();
+}
