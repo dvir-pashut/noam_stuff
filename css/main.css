@@ -45,17 +45,22 @@ body {
   z-index: 1;
 }
 
-/* --- Buttons --- */
+/* --- Buttons with Grid Layout --- */
 .button-container {
-  margin: 32px 0 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Always 2 per row */
   gap: 12px;
-  flex-wrap: wrap;
+  margin: 32px 0 0;
+  width: 100%;
+  max-width: 600px;
+  padding: 0 16px;
   justify-content: center;
 }
+
 .btn {
-  padding: 2px 4px;
-  font-size: 1.7rem;
+  width: 100%; /* Fills its grid cell */
+  padding: 12px 16px;
+  font-size: 1.3rem;
   border: none;
   border-radius: 50px;
   background: #ff4d6d;
@@ -63,8 +68,7 @@ body {
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
   transition: transform .2s ease, box-shadow .2s ease;
-  min-width: 300px;
-  min-height: 50px;
+  text-align: center;
 }
 
 .btn:hover {
@@ -72,10 +76,11 @@ body {
   box-shadow: 0 6px 16px rgba(0, 0, 0, .25);
 }
 
+
 /* --- Gallery --- */
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* Default: 2 columns */
   gap: 20px;
   width: 90%;
   max-width: 1200px;
@@ -90,6 +95,7 @@ body {
   transition: transform .3s ease;
   cursor: pointer;
 }
+
 .gallery img:hover { transform: scale(1.05); }
 
 /* --- Floating Hearts --- */
@@ -245,28 +251,6 @@ footer {
     border-radius: 50%;
   }
 
-/* --- Mobile Tweaks --- */
-@media (max-width: 600px) {
-    .btn {
-      font-size: 1.1rem;
-      padding: 14px 28px;
-      min-width: 160px;
-    }
-  
-    .letter-content {
-        font-size: 1.6rem;
-        padding: 30px;
-      }
-  
-    footer {
-      font-size: 1.1rem;
-      padding: 20px;
-    }
-  
-    #loveTimer {
-      font-size: 1.2rem;
-    }
-  }
 
   .love-note {
     position: fixed;
@@ -280,37 +264,76 @@ footer {
     font-weight: bold;
   }
 
-/* will add next release */
+  /* --- Responsive Layout Prep --- */
 
-  /* --- Video Gallery --- */
-.video-gallery {
-    display: grid;
+/* Gallery responsiveness for laptops and desktops */
+@media (min-width: 1024px) {
+  .gallery {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
-    width: 90%;
-    max-width: 1200px;
-    margin: 40px auto;
   }
-  
-  .video-thumb {
+
+  .btn {
+    min-width: 240px;
+    font-size: 1.6rem;
+  }
+
+  .button-container {
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Preparation for mobile adjustments later */
+/* --- Responsive Prep --- */
+@media (min-width: 992px) {
+  .gallery {
+    grid-template-columns: repeat(4, 1fr); /* 3 per row */
+  }
+}
+
+/* For mobile: keep it at 2 columns */
+@media (max-width: 768px) {
+  .gallery {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .button-container {
+    flex-direction: column;
+    align-items: center;
+    
+  }
+
+  .btn {
     width: 100%;
-    height: 300px;
-    object-fit: cover;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
-    cursor: pointer;
-    transition: transform .3s ease;
-  }
-  
-  .video-thumb:hover {
-    transform: scale(1.05);
-  }
-  
-  /* Video Lightbox */
-  #videoLightbox video {
     max-width: 90%;
-    max-height: 90%;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+    font-size: 1.4rem;
   }
-  
+
+
+  .hero h1 {
+    font-size: 1.8rem;
+    padding: 0 16px;
+  }
+
+  .letter-content {
+    font-size: 1.6rem;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 460px) {
+  .btn {
+    font-size: 1.1rem;
+    padding: 8px 10px;
+  }
+
+  .button-container {
+    flex-direction: column;
+    align-items: center;
+  }
+}
