@@ -155,7 +155,9 @@ footer {
   text-align: center;
   padding: 0 20px;
 }
-#loveTimer {
+#loveTimer,
+#sofSofTimer,
+#thailandTimer {
   font-weight: bold;
   font-size: 1.1rem;
   margin-bottom: 8px;
