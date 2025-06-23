@@ -22,6 +22,8 @@ const letterBox         = $("letterBox");
 const bg1               = $("bg1");
 const bg2               = $("bg2");
 const loveTimer         = $("loveTimer");
+const sofSofTimer       = $("sofSofTimer");
+const thailandTimer     = $("thailandTimer");
 
 let songs = [];
 let images = [];
@@ -60,7 +62,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     initBackgrounds();
     wireEvents();
     updateLoveTimer();
+    updateCountdown(sofSofTimer, sofSofDate, "סוף סוף");
+    updateCountdown(thailandTimer, thailandDate, "תאילנד");
     setInterval(updateLoveTimer, 1000);
+    setInterval(() => updateCountdown(sofSofTimer, sofSofDate, "סוף סוף"), 1000);
+    setInterval(() => updateCountdown(thailandTimer, thailandDate, "תאילנד"), 1000);
     setInterval(createHearts,      7000);
     setInterval(createLoveNotes, 11000);
   } catch (err) {
@@ -238,6 +244,8 @@ function wireEvents() {
 }
 
 const startDate = new Date("2025-03-06T14:26:00");
+const sofSofDate = new Date("2025-10-01T10:00:00");
+const thailandDate = new Date("2025-10-09T22:00:00");
 function updateLoveTimer() {
   const now = new Date();
   let diff = Math.floor((now - startDate)/1000);
@@ -246,6 +254,20 @@ function updateLoveTimer() {
   const mins = Math.floor(diff/60); diff %= 60;
   const secs = diff;
   loveTimer.textContent = `מאוהב קשות כבר ${days} ימים ${hours} שעות ${mins} דקות ${secs} שניות`;
+}
+
+function updateCountdown(elem, targetDate, label) {
+  const now = new Date();
+  let diff = Math.floor((targetDate - now)/1000);
+  if (diff < 0) {
+    elem.textContent = `${label} הגיע!`;
+    return;
+  }
+  const days = Math.floor(diff/86400); diff %= 86400;
+  const hours = Math.floor(diff/3600); diff %= 3600;
+  const mins = Math.floor(diff/60); diff %= 60;
+  const secs = diff;
+  elem.textContent = `${label} בעוד ${days} ימים ${hours} שעות ${mins} דקות ${secs} שניות`;
 }
 
 function createApprovedExplosions() {
