@@ -22,6 +22,8 @@ const letterBox         = $("letterBox");
 const bg1               = $("bg1");
 const bg2               = $("bg2");
 const loveTimer         = $("loveTimer");
+const thailandTimer     = $("thailandTimer");
+const sofSofTimer       = $("sofSofTimer");
 
 let songs = [];
 let images = [];
@@ -60,7 +62,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     initBackgrounds();
     wireEvents();
     updateLoveTimer();
+    updateThailandTimer();
+    updateSofSofTimer();
     setInterval(updateLoveTimer, 1000);
+    setInterval(updateThailandTimer, 1000);
+    setInterval(updateSofSofTimer, 1000);
     setInterval(createHearts,      7000);
     setInterval(createLoveNotes, 11000);
   } catch (err) {
@@ -237,7 +243,9 @@ function wireEvents() {
   $("uploadSongBtn").addEventListener("click", () => uploadFiles("songs"));
 }
 
-const startDate = new Date("2025-03-06T14:26:00");
+const startDate     = new Date("2025-03-06T14:26:00");
+const thailandDate  = new Date("2025-10-09T22:00:00");
+const sofSofDate    = new Date("2025-10-01T10:00:00");
 function updateLoveTimer() {
   const now = new Date();
   let diff = Math.floor((now - startDate)/1000);
@@ -246,6 +254,28 @@ function updateLoveTimer() {
   const mins = Math.floor(diff/60); diff %= 60;
   const secs = diff;
   loveTimer.textContent = `מאוהב קשות כבר ${days} ימים ${hours} שעות ${mins} דקות ${secs} שניות`;
+}
+
+function updateThailandTimer() {
+  const now = new Date();
+  let diff = Math.floor((thailandDate - now)/1000);
+  if (diff < 0) diff = 0;
+  const days = Math.floor(diff/86400); diff %= 86400;
+  const hours = Math.floor(diff/3600); diff %= 3600;
+  const mins = Math.floor(diff/60); diff %= 60;
+  const secs = diff;
+  thailandTimer.textContent = `תאילנד: ${days} ימים ${hours} שעות ${mins} דקות ${secs} שניות`;
+}
+
+function updateSofSofTimer() {
+  const now = new Date();
+  let diff = Math.floor((sofSofDate - now)/1000);
+  if (diff < 0) diff = 0;
+  const days = Math.floor(diff/86400); diff %= 86400;
+  const hours = Math.floor(diff/3600); diff %= 3600;
+  const mins = Math.floor(diff/60); diff %= 60;
+  const secs = diff;
+  sofSofTimer.textContent = `סוף סוף: ${days} ימים ${hours} שעות ${mins} דקות ${secs} שניות`;
 }
 
 function createApprovedExplosions() {
