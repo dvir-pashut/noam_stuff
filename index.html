@@ -26,19 +26,26 @@
     <button id="playBtn"           class="btn">פלייליסט 🎵</button>
     <button id="letterBtn"         class="btn">מכתב 💌</button>
     <button id="shuffleGalleryBtn" class="btn">גלריה 🖼️</button>
-    <button id="uploadImgBtn"      class="btn">העלה תמונות 📸</button>
-    <button id="uploadSongBtn"     class="btn">העלה שירים 🎶</button>
+    <button id="uploadImgBtn"      class="btn">העלאת מדיה</button>
+    <button id="uploadSongBtn"     class="btn">העלאת שירים 🎶</button>
+  </div>
+
+  <div class="tab-container">
+    <button id="videosTab" class="tab">סרטונים</button>
+    <button id="imagesTab" class="tab active">תמונות</button>
   </div>
 
   <!-- 🖼️ Image gallery -->
   <main>
     <div id="gallery" class="gallery"></div>
+    <div id="videoGallery" class="gallery" style="display:none"></div>
   </main>
 
   <!-- 🔍 Image lightbox -->
   <div id="lightbox" class="lightbox">
     <button class="close-btn" onclick="hideLightbox()">❌</button>
     <img id="lightbox-img" src="" alt="תמונה" />
+    <video id="lightbox-video" controls style="display:none"></video>
   </div>
 
   <!-- 💌 Love‑letter popup -->

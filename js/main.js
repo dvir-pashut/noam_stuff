@@ -5,6 +5,7 @@
 
 const BUCKET   = "https://nessy-site.s3.eu-central-1.amazonaws.com";
 const IMG_DIR  = "img/";
+const VID_DIR  = "videos/";
 const SONG_DIR = "songs/";
 const APPROVED_ICON = `./img/approved.png`;
 
@@ -16,8 +17,12 @@ const playBtn           = $("playBtn");
 const letterBtn         = $("letterBtn");
 const shuffleGalleryBtn = $("shuffleGalleryBtn");
 const gallery           = $("gallery");
+const videoGallery      = $("videoGallery");
+const videosTab         = $("videosTab");
+const imagesTab         = $("imagesTab");
 const lightbox          = $("lightbox");
 const lightboxImg       = $("lightbox-img");
+const lightboxVid       = $("lightbox-video");
 const letterBox         = $("letterBox");
 const bg1               = $("bg1");
 const bg2               = $("bg2");
@@ -27,6 +32,7 @@ const thailandTimer     = $("thailandTimer");
 
 let songs = [];
 let images = [];
+let videos = [];
 const queue = [];
 let currentBg = 1;
 let galleryInterval = null;
@@ -50,15 +56,21 @@ async function listS3Objects(prefix, exts) {
 =================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    [songs, images] = await Promise.all([
+    [songs, images, videos] = await Promise.all([
       listS3Objects(SONG_DIR, [".mp3"]),
-      listS3Objects(IMG_DIR , [".jpg", ".jpeg", ".png", ".gif", ".webp"])
+      listS3Objects(IMG_DIR , [".jpg", ".jpeg", ".png", ".gif", ".webp"]),
+      listS3Objects(VID_DIR , [
+        ".mp4", ".webm", ".ogg", ".mov", ".mkv", ".avi"
+      ])
     ]);
 
     songs  = songs.map(k => k.replace(SONG_DIR, ""));
     images = images.map(k => k.replace(IMG_DIR , ""));
+    videos = videos.map(k => k.replace(VID_DIR , ""));
 
     populateGallery();
+    populateVideoGallery();
+    showImages();
     initBackgrounds();
     wireEvents();
     updateLoveTimer();
@@ -89,17 +101,41 @@ function populateGallery() {
   });
 }
 
-function showLightbox(src) {
+function populateVideoGallery() {
+  videos.forEach(file => {
+    const vid = document.createElement("video");
+    vid.src = `${BUCKET}/${VID_DIR}${file}`;
+    vid.controls = true;
+    vid.style.maxWidth = "100%";
+    vid.style.borderRadius = "16px";
+    vid.addEventListener("click", () => showLightbox(vid.src, true));
+    videoGallery.appendChild(vid);
+  });
+}
+
+function showLightbox(src, isVideo = false) {
   if (galleryInterval) {
     clearInterval(galleryInterval);
     galleryInterval = null;
   }
-  lightboxImg.src = src;
+  if (isVideo) {
+    lightboxImg.style.display = "none";
+    lightboxVid.style.display = "block";
+    lightboxVid.src = src;
+    lightboxVid.play();
+  } else {
+    lightboxVid.pause();
+    lightboxVid.style.display = "none";
+    lightboxImg.style.display = "block";
+    lightboxImg.src = src;
+  }
   lightbox.classList.add("visible");
 }
 function hideLightbox() {
   lightbox.classList.remove("visible");
   lightboxImg.src = "";
+  lightboxVid.pause();
+  lightboxVid.src = "";
   if (galleryInterval) {
     clearInterval(galleryInterval);
     galleryInterval = null;
@@ -247,8 +283,10 @@ function wireEvents() {
     startGalleryShuffle();
   });
   $("approvedBtn").addEventListener("click", createApprovedExplosions);
-  $("uploadImgBtn").addEventListener("click", () => uploadFiles("img"));
+  $("uploadImgBtn").addEventListener("click", () => uploadFiles("media"));
   $("uploadSongBtn").addEventListener("click", () => uploadFiles("songs"));
+  videosTab.addEventListener("click", showVideos);
+  imagesTab.addEventListener("click", showImages);
 }
 
 const startDate = new Date("2025-03-06T14:26:00");
@@ -291,6 +329,20 @@ function createApprovedExplosions() {
   }
 }
 
+function showVideos() {
+  videosTab.classList.add("active");
+  imagesTab.classList.remove("active");
+  videoGallery.style.display = "grid";
+  gallery.style.display = "none";
+}
+
+function showImages() {
+  imagesTab.classList.add("active");
+  videosTab.classList.remove("active");
+  gallery.style.display = "grid";
+  videoGallery.style.display = "none";
+}
+
 /* ===================================================
    9) UPLOAD SUPPORT
 =================================================== */
@@ -298,16 +350,27 @@ async function uploadFiles(type) {
   const input = document.createElement("input");
   input.type = "file";
   input.multiple = true;
-  input.accept = type === "img" ? "image/*" : "audio/mpeg";
+  if (type === "media") {
+    input.accept = "image/*,video/*";
+  } else if (type === "img") {
+    input.accept = "image/*";
+  } else {
+    input.accept = "audio/mpeg";
+  }
 
   input.onchange = async () => {
     for (const file of input.files) {
-      const dir = type === "img" ? IMG_DIR : SONG_DIR;
+      let dir;
+      if (type === "media") {
+        dir = file.type.startsWith("video") ? VID_DIR : IMG_DIR;
+      } else {
+        dir = type === "img" ? IMG_DIR : SONG_DIR;
+      }
       const ext = file.name.substring(file.name.lastIndexOf("."));
       const base = file.name.substring(0, file.name.lastIndexOf("."));
       let key = `${base}${ext}`;
       let idx = 1;
-      const nameList = type === "img" ? images : songs;
+      const nameList = dir === IMG_DIR ? images : dir === SONG_DIR ? songs : videos;
       while (nameList.includes(key)) {
         key = `${base}_${idx++}${ext}`;
       }
@@ -323,7 +386,7 @@ async function uploadFiles(type) {
         continue;
       }
 
-      if (type === "img") {
+      if (dir === IMG_DIR) {
         images.push(key);
         const img = document.createElement("img");
         img.src = url;
@@ -331,6 +394,15 @@ async function uploadFiles(type) {
         img.alt = "תמונה חדשה";
         img.addEventListener("click", () => showLightbox(img.src));
         gallery.prepend(img);
+      } else if (dir === VID_DIR) {
+        videos.push(key);
+        const vid = document.createElement("video");
+        vid.src = url;
+        vid.controls = true;
+        vid.style.maxWidth = "100%";
+        vid.style.borderRadius = "16px";
+        vid.addEventListener("click", () => showLightbox(vid.src, true));
+        videoGallery.prepend(vid);
       } else {
         songs.push(key);
         showPlayerToast(key);
