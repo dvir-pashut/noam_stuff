@@ -90,12 +90,20 @@ function populateGallery() {
 }
 
 function showLightbox(src) {
+  if (galleryInterval) {
+    clearInterval(galleryInterval);
+    galleryInterval = null;
+  }
   lightboxImg.src = src;
   lightbox.classList.add("visible");
 }
 function hideLightbox() {
   lightbox.classList.remove("visible");
   lightboxImg.src = "";
+  if (galleryInterval) {
+    clearInterval(galleryInterval);
+    galleryInterval = null;
+  }
 }
 lightbox.addEventListener("click", (e) => e.target === lightbox && hideLightbox());
 
