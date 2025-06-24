@@ -359,6 +359,9 @@ async function uploadFiles(type) {
   }
 
   input.onchange = async () => {
+    const spinner = $("uploadSpinner");
+    if (spinner) spinner.classList.add("visible");
+    try {
     for (const file of input.files) {
       let dir;
       if (type === "media") {
@@ -407,6 +410,9 @@ async function uploadFiles(type) {
         songs.push(key);
         showPlayerToast(key);
       }
+    }
+    } finally {
+      if (spinner) spinner.classList.remove("visible");
     }
   };
 
