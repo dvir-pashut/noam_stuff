@@ -76,6 +76,27 @@ body {
   box-shadow: 0 6px 16px rgba(0, 0, 0, .25);
 }
 
+/* --- Media Tabs --- */
+.tab-container {
+  display: flex;
+  margin-top: 20px;
+  justify-content: center;
+}
+.tab {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  background: #e0e0e0;
+  cursor: pointer;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  margin: 0 2px;
+}
+.tab.active {
+  background: #fff;
+  z-index: 1;
+}
+
 
 /* --- Gallery --- */
 .gallery {
@@ -95,8 +116,18 @@ body {
   transition: transform .3s ease;
   cursor: pointer;
 }
+.gallery video {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
+  transition: transform .3s ease;
+  cursor: pointer;
+}
 
 .gallery img:hover { transform: scale(1.05); }
+.gallery video:hover { transform: scale(1.05); }
 
 /* --- Floating Hearts --- */
 .heart {
@@ -182,6 +213,12 @@ footer {
   pointer-events: auto;
 }
 .lightbox img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+}
+.lightbox video {
   max-width: 90%;
   max-height: 90%;
   border-radius: 12px;
