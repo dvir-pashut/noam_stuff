@@ -23,6 +23,7 @@ const imagesTab         = $("imagesTab");
 const lightbox          = $("lightbox");
 const lightboxImg       = $("lightbox-img");
 const lightboxVid       = $("lightbox-video");
+const downloadBtn       = $("downloadBtn");
 const letterBox         = $("letterBox");
 const bg1               = $("bg1");
 const bg2               = $("bg2");
@@ -103,13 +104,25 @@ function populateGallery() {
 
 function populateVideoGallery() {
   videos.forEach(file => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "video-wrapper";
+
     const vid = document.createElement("video");
     vid.src = `${BUCKET}/${VID_DIR}${file}`;
     vid.controls = true;
     vid.style.maxWidth = "100%";
     vid.style.borderRadius = "16px";
     vid.addEventListener("click", () => showLightbox(vid.src, true));
-    videoGallery.appendChild(vid);
+
+    const dl = document.createElement("a");
+    dl.href = vid.src;
+    dl.download = file;
+    dl.className = "download-btn";
+    dl.textContent = "⬇️";
+
+    wrapper.appendChild(vid);
+    wrapper.appendChild(dl);
+    videoGallery.appendChild(wrapper);
   });
 }
 
@@ -123,11 +136,17 @@ function showLightbox(src, isVideo = false) {
     lightboxVid.style.display = "block";
     lightboxVid.src = src;
     lightboxVid.play();
+    if (downloadBtn) {
+      downloadBtn.href = src;
+      downloadBtn.download = decodeURIComponent(src.split("/").pop());
+      downloadBtn.style.display = "block";
+    }
   } else {
     lightboxVid.pause();
     lightboxVid.style.display = "none";
     lightboxImg.style.display = "block";
     lightboxImg.src = src;
+    if (downloadBtn) downloadBtn.style.display = "none";
   }
   lightbox.classList.add("visible");
 }
@@ -136,6 +155,7 @@ function hideLightbox() {
   lightboxImg.src = "";
   lightboxVid.pause();
   lightboxVid.src = "";
+  if (downloadBtn) downloadBtn.style.display = "none";
   if (galleryInterval) {
     clearInterval(galleryInterval);
     galleryInterval = null;
@@ -399,13 +419,25 @@ async function uploadFiles(type) {
         gallery.prepend(img);
       } else if (dir === VID_DIR) {
         videos.push(key);
+        const wrapper = document.createElement("div");
+        wrapper.className = "video-wrapper";
+
         const vid = document.createElement("video");
         vid.src = url;
         vid.controls = true;
         vid.style.maxWidth = "100%";
         vid.style.borderRadius = "16px";
         vid.addEventListener("click", () => showLightbox(vid.src, true));
-        videoGallery.prepend(vid);
+
+        const dl = document.createElement("a");
+        dl.href = url;
+        dl.download = key;
+        dl.className = "download-btn";
+        dl.textContent = "⬇️";
+
+        wrapper.appendChild(vid);
+        wrapper.appendChild(dl);
+        videoGallery.prepend(wrapper);
       } else {
         songs.push(key);
         showPlayerToast(key);
