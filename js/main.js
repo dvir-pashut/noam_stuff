@@ -7,6 +7,7 @@ const BUCKET   = "https://nessy-site.s3.eu-central-1.amazonaws.com";
 const IMG_DIR  = "img/";
 const VID_DIR  = "videos/";
 const SONG_DIR = "songs/";
+const LETTERS_DIR = "letters/";
 const APPROVED_ICON = `./img/approved.png`;
 
 const $ = (id) => document.getElementById(id);
@@ -25,6 +26,7 @@ const lightboxImg       = $("lightbox-img");
 const lightboxVid       = $("lightbox-video");
 const downloadBtn       = $("downloadBtn");
 const letterBox         = $("letterBox");
+const writeLetterBox    = $("writeLetterBox");
 const bg1               = $("bg1");
 const bg2               = $("bg2");
 const loveTimer         = $("loveTimer");
@@ -34,6 +36,7 @@ const thailandTimer     = $("thailandTimer");
 let songs = [];
 let images = [];
 let videos = [];
+let letters = [];
 const queue = [];
 let currentBg = 1;
 let galleryInterval = null;
@@ -57,17 +60,19 @@ async function listS3Objects(prefix, exts) {
 =================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    [songs, images, videos] = await Promise.all([
+    [songs, images, videos, letters] = await Promise.all([
       listS3Objects(SONG_DIR, [".mp3"]),
       listS3Objects(IMG_DIR , [".jpg", ".jpeg", ".png", ".gif", ".webp"]),
       listS3Objects(VID_DIR , [
         ".mp4", ".webm", ".ogg", ".mov", ".mkv", ".avi"
-      ])
+      ]),
+      listS3Objects(LETTERS_DIR, [".txt", ".md", ".html"])
     ]);
 
     songs  = songs.map(k => k.replace(SONG_DIR, ""));
     images = images.map(k => k.replace(IMG_DIR , ""));
     videos = videos.map(k => k.replace(VID_DIR , ""));
+    letters = letters.map(k => k.replace(LETTERS_DIR, ""));
 
     populateGallery();
     populateVideoGallery();
@@ -162,6 +167,7 @@ function hideLightbox() {
   }
 }
 lightbox.addEventListener("click", (e) => e.target === lightbox && hideLightbox());
+writeLetterBox.addEventListener("click", (e) => e.target === writeLetterBox && hideWriteLetter());
 
 /* ===================================================
    4) MUSIC PLAYER WITH TOAST
@@ -290,14 +296,239 @@ function startGalleryShuffle() {
 }
 
 /* ===================================================
-   8) MISC
+   8) LETTERS
+=================================================== */
+async function fetchLetterContent(filename) {
+  try {
+    const response = await fetch(`${BUCKET}/${LETTERS_DIR}${filename}`);
+    if (!response.ok) throw new Error(`Failed to fetch ${filename}`);
+    return await response.text();
+  } catch (err) {
+    console.error(`Error fetching letter ${filename}:`, err);
+    return `שגיאה בטעינת המכתב: ${filename}`;
+  }
+}
+
+async function showLetters() {
+  if (letters.length === 0) {
+    const letterContainer = document.querySelector('.letters-container');
+    letterContainer.innerHTML = `
+      <p style="text-align: center; color: #ff69b4; margin-bottom: 30px;">אין מכתבים זמינים כרגע... 💌</p>
+      <div style="text-align: center;">
+        <button id="writeLetterBtn" class="btn" style="background: #ff1493; color: white; font-size: 1.4rem; padding: 15px 30px;">
+          כתיבת מכתב ראשון ✍️
+        </button>
+      </div>
+    `;
+    // Add event listener for the write letter button
+    document.getElementById('writeLetterBtn').addEventListener('click', showWriteLetter);
+    letterBox.classList.add("visible");
+    return;
+  }
+
+  try {
+    // Get letter info with dates from S3
+    const letterInfos = await Promise.all(
+      letters.map(async filename => {
+        try {
+          const response = await fetch(`${BUCKET}/${LETTERS_DIR}${filename}`, { method: 'HEAD' });
+          const lastModified = response.headers.get('Last-Modified');
+          const date = lastModified ? new Date(lastModified) : new Date();
+          
+          // Clean display name: remove file extension and convert underscores to spaces
+          const displayName = filename
+            .replace(/\.(txt|md|html)$/, '')
+            .replace(/_/g, ' ')
+            .replace(/❤️/g, '❤️'); // Keep hearts as they are
+          
+          return { filename, displayName, date };
+        } catch (err) {
+          console.warn(`Could not get info for ${filename}:`, err);
+          return { 
+            filename, 
+            displayName: filename.replace(/\.(txt|md|html)$/, '').replace(/_/g, ' '), 
+            date: new Date() 
+          };
+        }
+      })
+    );
+
+    // Sort by date (newest first)
+    letterInfos.sort((a, b) => b.date - a.date);
+
+    // Create the letters list display
+    const letterContainer = document.querySelector('.letters-container');
+    let html = `
+      <div style="margin-bottom: 20px; text-align: center;">
+        <p style="color: #ff69b4; font-size: 1.4rem; margin-bottom: 15px;">בחר מכתב לקריאה:</p>
+        <button id="writeLetterBtn" class="btn" style="background: #ff1493; color: white; font-size: 1.2rem; padding: 12px 25px; margin-bottom: 20px;">
+          כתיבת מכתב חדש ✍️
+        </button>
+      </div>
+    `;
+    
+    letterInfos.forEach(({ filename, displayName, date }, index) => {
+      const dateStr = date.toLocaleDateString('he-IL', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      html += `
+        <div class="letter-list-item" onclick="readLetter('${filename}')" 
+             style="margin-bottom: 15px; padding: 20px; border: 2px solid #ff69b4; border-radius: 15px; background: #fff8fa; cursor: pointer; transition: all 0.3s ease;">
+          <h3 style="color: #ff1493; margin-bottom: 10px; font-size: 1.6rem;">${displayName}</h3>
+          <p style="color: #888; font-size: 1rem; margin: 0;">נכתב ב: ${dateStr}</p>
+          <div style="margin-top: 10px; color: #ff69b4; font-size: 0.9rem;">לחץ לקריאה ➜</div>
+        </div>
+      `;
+    });
+
+    letterContainer.innerHTML = html;
+    
+    // Add event listener for the write letter button
+    document.getElementById('writeLetterBtn').addEventListener('click', showWriteLetter);
+    
+    letterBox.classList.add("visible");
+  } catch (err) {
+    console.error("Error loading letters:", err);
+    const letterContainer = document.querySelector('.letters-container');
+    letterContainer.innerHTML = `<p style="text-align: center; color: #ff1493;">שגיאה בטעינת המכתבים... 💔</p>`;
+    letterBox.classList.add("visible");
+  }
+}
+
+async function readLetter(filename) {
+  try {
+    const content = await fetchLetterContent(filename);
+    const displayName = filename
+      .replace(/\.(txt|md|html)$/, '')
+      .replace(/_/g, ' ');
+    
+    const letterContainer = document.querySelector('.letters-container');
+    letterContainer.innerHTML = `
+      <div style="margin-bottom: 20px;">
+        <button onclick="showLetters()" style="background: #ff69b4; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 1rem;">
+          ← חזור לרשימת המכתבים
+        </button>
+      </div>
+      <div style="margin-bottom: 20px; padding: 20px; border: 2px solid #ff69b4; border-radius: 15px; background: #fff8fa;">
+        <h3 style="color: #ff1493; margin-bottom: 15px; font-size: 1.8rem;">${displayName}</h3>
+        <div style="white-space: pre-wrap; line-height: 1.8; font-size: 1.6rem;">${content}</div>
+      </div>
+    `;
+  } catch (err) {
+    console.error("Error reading letter:", err);
+    alert("שגיאה בקריאת המכתב");
+  }
+}
+
+function showWriteLetter() {
+  // Clear previous content
+  $("letterNameInput").value = "";
+  $("letterContentInput").value = "";
+  writeLetterBox.classList.add("visible");
+}
+
+async function saveLetter() {
+  const letterName = $("letterNameInput").value.trim();
+  const letterContent = $("letterContentInput").value.trim();
+
+  if (!letterName) {
+    alert("❌ אנא הכנס שם למכתב");
+    return;
+  }
+
+  if (!letterContent) {
+    alert("❌ אנא כתוב תוכן למכתב");
+    return;
+  }
+
+  const spinner = $("uploadSpinner");
+  if (spinner) spinner.classList.add("visible");
+
+  try {
+    // Create filename - preserve Hebrew and special characters, but replace spaces and problematic chars with underscores
+    let filename = letterName
+      .replace(/[<>:"/\\|?*]/g, '') // Remove file system invalid characters
+      .replace(/\s+/g, '_') // Replace spaces with underscores
+      .trim();
+    
+    // Add .txt extension if not present
+    if (!filename.match(/\.(txt|md|html)$/i)) {
+      filename += '.txt';
+    }
+
+    // Check if filename already exists and add number suffix if needed
+    let finalFilename = filename;
+    let counter = 1;
+    while (letters.includes(finalFilename)) {
+      const nameWithoutExt = filename.replace(/\.(txt|md|html)$/i, '');
+      const ext = filename.match(/\.(txt|md|html)$/i)?.[0] || '.txt';
+      finalFilename = `${nameWithoutExt}_${counter}${ext}`;
+      counter++;
+    }
+
+    // Upload to S3 with proper encoding
+    const url = `${BUCKET}/${LETTERS_DIR}${encodeURIComponent(finalFilename)}`;
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "text/plain; charset=utf-8"
+      },
+      body: new TextEncoder().encode(letterContent) // Ensure UTF-8 encoding
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
+    }
+
+    // Add to letters array
+    letters.push(finalFilename);
+
+    // Show success message with clean display name
+    const displayName = finalFilename
+      .replace(/\.(txt|md|html)$/i, '')
+      .replace(/_/g, ' ');
+    
+    alert(`✅ המכתב "${displayName}" נשמר בהצלחה!`);
+    
+    // Hide the write letter modal
+    hideWriteLetter();
+
+    // Create some celebratory effects
+    createHearts();
+    createLoveNotes();
+
+  } catch (err) {
+    console.error("Error saving letter:", err);
+    alert(`❌ שגיאה בשמירת המכתב: ${err.message}`);
+  } finally {
+    if (spinner) spinner.classList.remove("visible");
+  }
+}
+
+/* ===================================================
+   9) MISC
 =================================================== */
 function hideLetter() {
   letterBox.classList.remove("visible");
 }
+
+function hideWriteLetter() {
+  writeLetterBox.classList.remove("visible");
+}
+
+// Make functions globally accessible
+window.hideLetter = hideLetter;
+window.hideWriteLetter = hideWriteLetter;
+window.readLetter = readLetter;
 function wireEvents() {
   playBtn.addEventListener("click", playNext);
-  letterBtn.addEventListener("click", () => letterBox.classList.add("visible"));
+  letterBtn.addEventListener("click", showLetters);
+  $("saveLetter").addEventListener("click", saveLetter);
   shuffleGalleryBtn.addEventListener("click", () => {
     if (galleryInterval) clearInterval(galleryInterval);
     startGalleryShuffle();
