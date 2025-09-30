@@ -414,3 +414,10 @@ footer {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* --- Letter List Items --- */
+.letter-list-item:hover {
+  background: #ffe4f1 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+}
