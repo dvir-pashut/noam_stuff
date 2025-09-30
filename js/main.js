@@ -1,7 +1,14 @@
 /* ---------------------------------------------------
    main.js  —  Dynamic S‑3 version (with toast player)
    Author:  Dvir Pashut
----------------------------------------------------- */
+----------------------------------------------  // Show/hide the static load more button
+  const loadMoreBtn = document.getElementById('loadMoreVideos');
+  const sortedVideos = videos.sort().reverse();
+  if (endIndex < sortedVideos.length) {
+    loadMoreBtn.style.display = 'inline-block';
+  } else {
+    loadMoreBtn.style.display = 'none';
+  }*/
 
 const BUCKET   = "https://nessy-site.s3.eu-central-1.amazonaws.com";
 const IMG_DIR  = "img/";
@@ -41,6 +48,12 @@ const queue = [];
 let currentBg = 1;
 let galleryInterval = null;
 
+// Pagination state
+const ITEMS_PER_PAGE = 20;
+const VIDEOS_PER_PAGE = 4;
+let currentImagePage = 0;
+let currentVideoPage = 0;
+
 
 /* ===================================================
    1) S3 LISTING
@@ -50,9 +63,23 @@ async function listS3Objects(prefix, exts) {
   const res = await fetch(url, { mode: "cors" });
   if (!res.ok) throw new Error(`S‑3 list failed for ${prefix}`);
   const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
-  return Array.from(xml.getElementsByTagName("Key"))
-    .map(n => n.textContent)
-    .filter(k => exts.some(ext => k.toLowerCase().endsWith(ext)));
+  
+  // Get all Contents elements which contain both Key and LastModified
+  const contents = Array.from(xml.getElementsByTagName("Contents"));
+  
+  return contents
+    .map(content => {
+      const keyElement = content.getElementsByTagName("Key")[0];
+      const lastModifiedElement = content.getElementsByTagName("LastModified")[0];
+      
+      if (!keyElement || !lastModifiedElement) return null;
+      
+      const key = keyElement.textContent;
+      const lastModified = new Date(lastModifiedElement.textContent);
+      
+      return { key, lastModified };
+    })
+    .filter(item => item && exts.some(ext => item.key.toLowerCase().endsWith(ext.toLowerCase())));
 }
 
 /* ===================================================
@@ -62,17 +89,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     [songs, images, videos, letters] = await Promise.all([
       listS3Objects(SONG_DIR, [".mp3"]),
-      listS3Objects(IMG_DIR , [".jpg", ".jpeg", ".png", ".gif", ".webp"]),
+      listS3Objects(IMG_DIR , [".jpg", ".jpeg", ".png", ".gif", ".webp", ".HEIC", ".heic"]),
       listS3Objects(VID_DIR , [
         ".mp4", ".webm", ".ogg", ".mov", ".mkv", ".avi"
       ]),
       listS3Objects(LETTERS_DIR, [".txt", ".md", ".html"])
     ]);
 
-    songs  = songs.map(k => k.replace(SONG_DIR, ""));
-    images = images.map(k => k.replace(IMG_DIR , ""));
-    videos = videos.map(k => k.replace(VID_DIR , ""));
-    letters = letters.map(k => k.replace(LETTERS_DIR, ""));
+    // Extract filenames and sort by LastModified date (newest first)
+    songs  = songs.map(item => item.key.replace(SONG_DIR, ""));
+    
+    images = images
+      .sort((a, b) => b.lastModified - a.lastModified) // Sort by date, newest first
+      .map(item => item.key.replace(IMG_DIR, ""));
+    
+    videos = videos
+      .sort((a, b) => b.lastModified - a.lastModified) // Sort by date, newest first
+      .map(item => item.key.replace(VID_DIR, ""));
+    
+    letters = letters.map(item => item.key.replace(LETTERS_DIR, ""));
 
     populateGallery();
     populateVideoGallery();
@@ -94,21 +129,78 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 /* ===================================================
-   3) GALLERY
+   3) GALLERY WITH PAGINATION
 =================================================== */
 function populateGallery() {
-  images.forEach(file => {
+  // Clear existing content
+  gallery.innerHTML = '';
+  currentImagePage = 0;
+  loadImagePage();
+}
+
+function loadImagePage() {
+  const startIndex = currentImagePage * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, images.length);
+  const pageImages = images.slice(startIndex, endIndex);
+  
+  pageImages.forEach(file => {
     const img = document.createElement("img");
-    img.src  = `${BUCKET}/${IMG_DIR}${file}`;
-    img.alt  = `תמונה מתוך הגלריה - ${file}`;
+    img.src = `${BUCKET}/${IMG_DIR}${file}`;
+    img.alt = `תמונה מתוך הגלריה - ${file}`;
     img.loading = "lazy";
     img.addEventListener("click", () => showLightbox(img.src));
     gallery.appendChild(img);
   });
+  
+  // Remove existing load more button
+  const existingBtn = gallery.querySelector('.load-more-btn');
+  if (existingBtn) existingBtn.remove();
+  
+  // Show/hide the static load more button
+  const loadMoreBtn = document.getElementById('loadMoreImages');
+  if (endIndex < images.length) {
+    loadMoreBtn.style.display = 'inline-block';
+  } else {
+    loadMoreBtn.style.display = 'none';
+  }
+}
+
+// Helper function to update image button visibility without reloading
+function updateImageButtonVisibility() {
+  const totalLoaded = (currentImagePage + 1) * ITEMS_PER_PAGE;
+  const loadMoreBtn = document.getElementById('loadMoreImages');
+  if (totalLoaded < images.length) {
+    loadMoreBtn.style.display = 'inline-block';
+  } else {
+    loadMoreBtn.style.display = 'none';
+  }
+}
+
+// Helper function to update video button visibility without reloading
+function updateVideoButtonVisibility() {
+  const totalLoaded = (currentVideoPage + 1) * VIDEOS_PER_PAGE;
+  const loadMoreBtn = document.getElementById('loadMoreVideos');
+  if (totalLoaded < videos.length) {
+    loadMoreBtn.style.display = 'inline-block';
+  } else {
+    loadMoreBtn.style.display = 'none';
+  }
 }
 
 function populateVideoGallery() {
-  videos.forEach(file => {
+  // Clear existing content
+  videoGallery.innerHTML = '';
+  currentVideoPage = 0;
+  loadVideoPage();
+}
+
+function loadVideoPage() {
+  // Videos are already sorted by newest first
+  const startIndex = currentVideoPage * VIDEOS_PER_PAGE;
+  const endIndex = Math.min(startIndex + VIDEOS_PER_PAGE, videos.length);
+  const pageVideos = videos.slice(startIndex, endIndex);
+  
+  pageVideos.forEach(file => {
     const wrapper = document.createElement("div");
     wrapper.className = "video-wrapper";
 
@@ -129,6 +221,18 @@ function populateVideoGallery() {
     wrapper.appendChild(dl);
     videoGallery.appendChild(wrapper);
   });
+  
+  // Remove existing load more button
+  const existingBtn = videoGallery.querySelector('.load-more-btn');
+  if (existingBtn) existingBtn.remove();
+  
+  // Show/hide the static load more button
+  const loadMoreBtn = document.getElementById('loadMoreVideos');
+  if (endIndex < videos.length) {
+    loadMoreBtn.style.display = 'inline-block';
+  } else {
+    loadMoreBtn.style.display = 'none';
+  }
 }
 
 function showLightbox(src, isVideo = false) {
@@ -380,7 +484,7 @@ async function showLetters() {
         <div class="letter-list-item" onclick="readLetter('${filename}')" 
              style="margin-bottom: 15px; padding: 20px; border: 2px solid #ff69b4; border-radius: 15px; background: #fff8fa; cursor: pointer; transition: all 0.3s ease;">
           <h3 style="color: #ff1493; margin-bottom: 10px; font-size: 1.6rem;">${displayName}</h3>
-          <p style="color: #888; font-size: 1rem; margin: 0;">נכתב ב: ${dateStr}</p>
+          <!--<p style="color: #888; font-size: 1rem; margin: 0;">נכתב ב: ${dateStr}</p>-->
           <div style="margin-top: 10px; color: #ff69b4; font-size: 0.9rem;">לחץ לקריאה ➜</div>
         </div>
       `;
@@ -538,6 +642,34 @@ function wireEvents() {
   $("uploadSongBtn").addEventListener("click", () => uploadFiles("songs"));
   videosTab.addEventListener("click", showVideos);
   imagesTab.addEventListener("click", showImages);
+  
+  // Add event listeners for load more buttons
+  $("loadMoreImages").addEventListener("click", () => {
+    currentImagePage++;
+    loadImagePage();
+  });
+  $("loadMoreVideos").addEventListener("click", () => {
+    currentVideoPage++;
+    loadVideoPage();
+  });
+  
+  // Add hover effects for load more buttons
+  const loadMoreImages = $("loadMoreImages");
+  const loadMoreVideos = $("loadMoreVideos");
+  
+  loadMoreImages.addEventListener("mouseenter", () => {
+    loadMoreImages.style.background = '#ff1493';
+  });
+  loadMoreImages.addEventListener("mouseleave", () => {
+    loadMoreImages.style.background = '#ff69b4';
+  });
+  
+  loadMoreVideos.addEventListener("mouseenter", () => {
+    loadMoreVideos.style.background = '#ff1493';
+  });
+  loadMoreVideos.addEventListener("mouseleave", () => {
+    loadMoreVideos.style.background = '#ff69b4';
+  });
 }
 
 const startDate = new Date("2025-03-06T14:26:00");
@@ -608,6 +740,12 @@ function showVideos() {
   imagesTab.classList.remove("active");
   videoGallery.style.display = "grid";
   gallery.style.display = "none";
+  
+  // Hide image load more button
+  document.getElementById('loadMoreImages').style.display = 'none';
+  
+  // Update video button visibility without reloading content
+  updateVideoButtonVisibility();
 }
 
 function showImages() {
@@ -615,6 +753,12 @@ function showImages() {
   videosTab.classList.remove("active");
   gallery.style.display = "grid";
   videoGallery.style.display = "none";
+  
+  // Hide video load more button
+  document.getElementById('loadMoreVideos').style.display = 'none';
+  
+  // Update image button visibility without reloading content
+  updateImageButtonVisibility();
 }
 
 /* ===================================================
