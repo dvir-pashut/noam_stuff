@@ -80,10 +80,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     initBackgrounds();
     wireEvents();
     updateLoveTimer();
-    updateCountdown(sofSofTimer, sofSofDate, "סוף סוף");
+    updateSofSofTimer();
     updateCountdown(thailandTimer, thailandDate, "תאילנד");
     setInterval(updateLoveTimer, 1000);
-    setInterval(() => updateCountdown(sofSofTimer, sofSofDate, "סוף סוף"), 1000);
+    setInterval(updateSofSofTimer, 1000);
     setInterval(() => updateCountdown(thailandTimer, thailandDate, "תאילנד"), 1000);
     setInterval(createHearts,      7000);
     setInterval(createLoveNotes, 11000);
@@ -541,7 +541,7 @@ function wireEvents() {
 }
 
 const startDate = new Date("2025-03-06T14:26:00");
-const sofSofDate = new Date("2025-10-01T10:00:00");
+const sofSofDate = new Date("2025-08-20T00:00:00");
 const thailandDate = new Date("2025-10-09T22:00:00");
 function updateLoveTimer() {
   const now = new Date();
@@ -551,6 +551,29 @@ function updateLoveTimer() {
   const mins = Math.floor(diff/60); diff %= 60;
   const secs = diff;
   loveTimer.textContent = `מאוהב קשות כבר ${days} ימים ${hours} שעות ${mins} דקות ${secs} שניות`;
+}
+
+function updateSofSofTimer() {
+  const now = new Date();
+  let diff = Math.floor((now - sofSofDate)/1000);
+  
+  // If the date hasn't arrived yet, show countdown
+  if (diff < 0) {
+    diff = Math.abs(diff);
+    const days = Math.floor(diff/86400); diff %= 86400;
+    const hours = Math.floor(diff/3600); diff %= 3600;
+    const mins = Math.floor(diff/60); diff %= 60;
+    const secs = diff;
+    sofSofTimer.textContent = `עוד ${days} ימים ${hours} שעות ${mins} דקות ${secs} שניות עד שנגור ביחד`;
+    return;
+  }
+  
+  // If the date has passed, show elapsed time
+  const days = Math.floor(diff/86400); diff %= 86400;
+  const hours = Math.floor(diff/3600); diff %= 3600;
+  const mins = Math.floor(diff/60); diff %= 60;
+  const secs = diff;
+  sofSofTimer.textContent = `גר עם אהבת חיי כבר ${days} ימים ${hours} שעות ${mins} דקות ${secs} שניות`;
 }
 
 function updateCountdown(elem, targetDate, label) {
