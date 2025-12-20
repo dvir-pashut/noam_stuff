@@ -38,7 +38,14 @@
   <!-- 🖼️ Image gallery -->
   <main>
     <div id="gallery" class="gallery"></div>
+    <div style="text-align: center; margin: 20px 0;">
+      <button id="loadMoreImages" class="btn" style="display: none; width: auto; background: #ff69b4; color: white; font-size: 1.2rem; padding: 15px 30px; border: none; border-radius: 10px; cursor: pointer; transition: background 0.3s;">לטעון עוד</button>
+    </div>
+    
     <div id="videoGallery" class="gallery" style="display:none"></div>
+    <div style="text-align: center; margin: 20px 0;">
+      <button id="loadMoreVideos" class="btn" style="display: none; width: auto; background: #ff69b4; color: white; font-size: 1.2rem; padding: 15px 30px; border: none; border-radius: 10px; cursor: pointer; transition: background 0.3s;">לטעון עוד</button>
+    </div>
   </main>
 
   <!-- 🔍 Image lightbox -->
@@ -55,10 +62,7 @@
       <button class="close-btn" onclick="hideLetter()">❌</button>
       <h2 style="color: #ff1493; text-align: center; margin-bottom: 30px; font-size: 2.2rem;">💌 המכתבים שלי אליך 💌</h2>
       <div class="letters-container">
-        <p>קודם כל תני להתחיל בלציין שמזל שאנחנו לא זוג קיטשי ודביק <br> באמת מזל <br> אבל מה שכן.
-          אני לא יכול לדמיין את החיים שלי בלעדייך <br> נכנסת אליהם כל כך מהר ותפסת מקום אצלי בלב <br> כל רגע בלעדייך קשה יותר מהשני <br> וכל רגע שאני איתך זה חלום שמתגשם <br
-          אני באמת לא מבין איך חייתי בלעדייך עד עכשיו <br> ובאמת אני שלך <br> כל כולי שלך <br> זכיתי בך <br> בשבילך עד סוף העולם (אפילו השקית בשירותים 😉) <br>
-          אני אוהב אותך מלא מלא מלא <br> נסקוש <br> את באמת מושלמת </p>
+        <!-- Dynamic content will be loaded here -->
       </div>
     </div>
   </div>
