@@ -417,9 +417,6 @@ async function fetchLetterContent(filename) {
 }
 
 async function showLetters() {
-  // Ensure regular scrolling mode when showing list
-  letterBox.classList.remove("embed-mode");
-
   if (letters.length === 0) {
     const letterContainer = document.querySelector('.letters-container');
     letterContainer.innerHTML = `
@@ -523,7 +520,6 @@ async function showLetters() {
 async function readLetter(filename) {
   try {
     if (filename === BOOK_LETTER_ID) {
-      letterBox.classList.add("embed-mode");
       const letterContainer = document.querySelector('.letters-container');
       letterContainer.innerHTML = `
         <div style="margin-bottom: 20px;">
@@ -533,25 +529,22 @@ async function readLetter(filename) {
         </div>
         <div style="margin-bottom: 16px; padding: 20px; border: 2px solid #ff69b4; border-radius: 15px; background: #fff8fa;">
           <h3 style="color: #ff1493; margin-bottom: 12px; font-size: 1.8rem;">הספר שלנו 📖</h3>
-        </div>
-        <div class="embedded-letter-frame">
-          <iframe
-            src="${BOOK_URL}"
-            title="הספר שלנו"
-            loading="lazy"
-            referrerpolicy="no-referrer"
-            allowfullscreen
-          ></iframe>
-        </div>
+          <div style="height: 70vh; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 105, 180, 0.35); background: white;">
+            <iframe
+              src="${BOOK_URL}"
+              title="הספר שלנו"
+              style="width: 100%; height: 100%; border: 0;"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              allowfullscreen
+            ></iframe>
+          </div>
           <div style="margin-top: 12px; text-align: center;">
             <a href="${BOOK_URL}" target="_blank" rel="noopener noreferrer" style="color: #ff1493; text-decoration: underline; font-size: 1rem;">פתיחה בטאב חדש</a>
           </div>
       `;
       return;
     }
-
-    // Regular letter mode
-    letterBox.classList.remove("embed-mode");
 
     const content = await fetchLetterContent(filename);
     const displayName = filename
@@ -665,7 +658,6 @@ async function saveLetter() {
    9) MISC
 =================================================== */
 function hideLetter() {
-  letterBox.classList.remove("embed-mode");
   letterBox.classList.remove("visible");
 }
 
