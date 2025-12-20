@@ -10,6 +10,9 @@ const SONG_DIR = "songs/";
 const LETTERS_DIR = "letters/";
 const APPROVED_ICON = `./img/approved.png`;
 
+const BOOK_LETTER_ID = "__embedded_book__";
+const BOOK_URL = "https://dvir-pashut.github.io/book/";
+
 const $ = (id) => document.getElementById(id);
 const shuffle = (arr) => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
 
@@ -356,6 +359,13 @@ async function showLetters() {
     // Sort by date (newest first)
     letterInfos.sort((a, b) => b.date - a.date);
 
+    // Add a special embedded "letter" that opens the hosted book inside the modal
+    letterInfos.unshift({
+      filename: BOOK_LETTER_ID,
+      displayName: "הספר שלנו 📖",
+      date: new Date(0)
+    });
+
     // Create the letters list display
     const letterContainer = document.querySelector('.letters-container');
     let html = `
@@ -368,20 +378,23 @@ async function showLetters() {
     `;
     
     letterInfos.forEach(({ filename, displayName, date }, index) => {
-      const dateStr = date.toLocaleDateString('he-IL', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      const isBook = filename === BOOK_LETTER_ID;
+      const dateStr = isBook
+        ? ""
+        : date.toLocaleDateString('he-IL', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
       
       html += `
         <div class="letter-list-item" onclick="readLetter('${filename}')" 
              style="margin-bottom: 15px; padding: 20px; border: 2px solid #ff69b4; border-radius: 15px; background: #fff8fa; cursor: pointer; transition: all 0.3s ease;">
           <h3 style="color: #ff1493; margin-bottom: 10px; font-size: 1.6rem;">${displayName}</h3>
-          <p style="color: #888; font-size: 1rem; margin: 0;">נכתב ב: ${dateStr}</p>
-          <div style="margin-top: 10px; color: #ff69b4; font-size: 0.9rem;">לחץ לקריאה ➜</div>
+          ${isBook ? '<p style="color: #888; font-size: 1rem; margin: 0;">נפתח בתוך המכתב (דף אינטרנט) </p>' : `<p style="color: #888; font-size: 1rem; margin: 0;">נכתב ב: ${dateStr}</p>`}
+          <div style="margin-top: 10px; color: #ff69b4; font-size: 0.9rem;">לחץ לפתיחה ➜</div>
         </div>
       `;
     });
@@ -402,6 +415,34 @@ async function showLetters() {
 
 async function readLetter(filename) {
   try {
+    if (filename === BOOK_LETTER_ID) {
+      const letterContainer = document.querySelector('.letters-container');
+      letterContainer.innerHTML = `
+        <div style="margin-bottom: 20px;">
+          <button onclick="showLetters()" style="background: #ff69b4; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 1rem;">
+            ← חזור לרשימת המכתבים
+          </button>
+        </div>
+        <div style="margin-bottom: 16px; padding: 20px; border: 2px solid #ff69b4; border-radius: 15px; background: #fff8fa;">
+          <h3 style="color: #ff1493; margin-bottom: 12px; font-size: 1.8rem;">הספר שלנו 📖</h3>
+          <div style="height: 70vh; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 105, 180, 0.35); background: white;">
+            <iframe
+              src="${BOOK_URL}"
+              title="הספר שלנו"
+              style="width: 100%; height: 100%; border: 0;"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              allowfullscreen
+            ></iframe>
+          </div>
+          <div style="margin-top: 12px; text-align: center;">
+            <a href="${BOOK_URL}" target="_blank" rel="noopener noreferrer" style="color: #ff1493; text-decoration: underline; font-size: 1rem;">פתיחה בטאב חדש</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
     const content = await fetchLetterContent(filename);
     const displayName = filename
       .replace(/\.(txt|md|html)$/, '')
