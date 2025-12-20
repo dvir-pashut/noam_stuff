@@ -119,10 +119,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     wireEvents();
     updateLoveTimer();
     updateSofSofTimer();
-    updateCountdown(thailandTimer, thailandDate, "תאילנד");
+    updateCountdown(thailandTimer, thailandDate, "יומולדת לנסי");
     setInterval(updateLoveTimer, 1000);
     setInterval(updateSofSofTimer, 1000);
-    setInterval(() => updateCountdown(thailandTimer, thailandDate, "תאילנד"), 1000);
+    setInterval(() => updateCountdown(thailandTimer, thailandDate, "יומולדת לנסי"), 1000);
     setInterval(createHearts,      7000);
     setInterval(createLoveNotes, 11000);
   } catch (err) {
@@ -714,7 +714,8 @@ function wireEvents() {
 
 const startDate = new Date("2025-03-06T14:26:00");
 const sofSofDate = new Date("2025-08-20T00:00:00");
-const thailandDate = new Date("2025-10-09T22:00:00");
+// 05/02/2026 (dd/mm/yyyy) -> February 5, 2026
+const thailandDate = new Date(2026, 1, 5, 0, 0, 0);
 function updateLoveTimer() {
   const now = new Date();
   let diff = Math.floor((now - startDate)/1000);
